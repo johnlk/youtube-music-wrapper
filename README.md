@@ -1,2 +1,28 @@
-# youtube-music-wrapper
-desktop app for youtube music
+# YouTube Music Wrapper
+
+A small Electron desktop shell for [YouTube Music](https://music.youtube.com).
+
+The app deliberately leaves search, queueing, playback, account state, and library behavior to YouTube Music itself. The native shell is responsible for giving the site its own desktop window, session storage, menu actions, and future macOS app polish.
+
+## Current Scope
+
+This repo is in the compatibility-spike phase. The main question is whether Google sign-in and YouTube Music playback work reliably inside Electron.
+
+## Development
+
+```sh
+bun install
+bun run dev
+```
+
+Useful commands:
+
+```sh
+bun run typecheck
+bun run build
+bun run package:mac
+```
+
+## Compatibility Checklist
+
+See [docs/compatibility-spike.md](docs/compatibility-spike.md).
