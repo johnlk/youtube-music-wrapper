@@ -46,6 +46,10 @@ bun run build
 bun run package:mac
 ```
 
+## Releases
+
+Pull requests run the GitHub Actions PR checks, and tagged releases can publish the generated macOS `.dmg` and `.zip` artifacts. See [docs/release.md](docs/release.md).
+
 ## Native Shell Features
 
 - Dedicated Electron window for `https://music.youtube.com/`.
