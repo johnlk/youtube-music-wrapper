@@ -27,6 +27,8 @@ type TrayController = {
 
 let tray: Tray | null = null;
 let trayController: TrayController | null = null;
+let onClickListener: (() => void) | null = null;
+let onRightClickListener: (() => void) | null = null;
 
 export function installTrayController(controller: TrayController): Tray | null {
   const icon = createTrayIcon();
@@ -36,22 +38,44 @@ export function installTrayController(controller: TrayController): Tray | null {
     return null;
   }
 
+  uninstallTrayController();
+
   trayController = controller;
-
-  if (tray) {
-    tray.destroy();
-  }
-
   tray = new Tray(icon);
   tray.setToolTip(APP_NAME);
-  tray.on("click", () => {
+
+  onClickListener = () => {
     controller.toggleWindowVisibility();
     updateTrayControllerMenu();
-  });
-  tray.on("right-click", updateTrayControllerMenu);
+  };
+  onRightClickListener = () => updateTrayControllerMenu();
+
+  tray.on("click", onClickListener);
+  tray.on("right-click", onRightClickListener);
   updateTrayControllerMenu();
 
   return tray;
+}
+
+export function uninstallTrayController(): void {
+  if (!tray) {
+    trayController = null;
+    return;
+  }
+
+  if (onClickListener) {
+    tray.off("click", onClickListener);
+    onClickListener = null;
+  }
+
+  if (onRightClickListener) {
+    tray.off("right-click", onRightClickListener);
+    onRightClickListener = null;
+  }
+
+  tray.destroy();
+  tray = null;
+  trayController = null;
 }
 
 export function updateTrayControllerMenu(): void {

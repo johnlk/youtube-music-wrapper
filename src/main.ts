@@ -1,4 +1,4 @@
-import { app, BrowserWindow, nativeImage, shell } from "electron";
+import { app, BrowserWindow, nativeImage } from "electron";
 import * as path from "node:path";
 import { installAppMenu } from "./app-menu";
 import {
@@ -9,6 +9,7 @@ import {
   unregisterMediaShortcuts
 } from "./media-controls";
 import { focusSearch } from "./page-actions";
+import { installGlobalWebContentsPolicy, installSessionPolicy } from "./security";
 import { installTrayController, updateTrayControllerMenu } from "./tray-controller";
 import {
   applyWindowMode,
@@ -37,13 +38,22 @@ const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
   app.quit();
 } else {
-  app.on("second-instance", () => {
+  app.on("second-instance", (_event, argv, workingDirectory) => {
+    // Reserved for future deep-link handling (e.g. youtubemusic:// URLs).
+    // For now we just log the inputs and surface the existing window.
+    if (argv.length > 0) {
+      console.info(`[main] second-instance argv=${JSON.stringify(argv)} cwd=${workingDirectory}`);
+    }
+
     showMainWindow();
   });
+
+  installGlobalWebContentsPolicy();
 
   void app.whenReady().then(() => {
     savedWindowState = readWindowState();
     windowMode = savedWindowState.windowMode;
+    installSessionPolicy(SESSION_PARTITION);
     installShellMenu();
     installDockIcon();
     createMainWindow();
@@ -86,7 +96,7 @@ function createMainWindow(): BrowserWindow {
   restoreWindowPresentation(window, initialWindowState);
   trackWindowState(window, persistCurrentWindowState);
   installAppCommandMediaControls(window);
-  installNavigationPolicy(window);
+  installLoadFailureRecovery(window);
 
   window.once("ready-to-show", () => {
     window.show();
@@ -244,6 +254,87 @@ function getSavedWindowState(): SavedWindowState {
   return savedWindowState;
 }
 
+function installLoadFailureRecovery(window: BrowserWindow): void {
+  window.webContents.on(
+    "did-fail-load",
+    (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      if (!isMainFrame) {
+        return;
+      }
+
+      // -3 / ABORTED is fired during normal navigation cancellation; ignore.
+      if (errorCode === -3) {
+        return;
+      }
+
+      console.warn(
+        `[main] did-fail-load url=${validatedURL} code=${errorCode} description=${errorDescription}`
+      );
+
+      void window.loadURL(buildErrorPageUrl(errorDescription || "Unable to reach YouTube Music."));
+    }
+  );
+}
+
+function buildErrorPageUrl(message: string): string {
+  const safeMessage = String(message).replace(/[<>&]/g, (character) => {
+    switch (character) {
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case "&":
+        return "&amp;";
+      default:
+        return character;
+    }
+  });
+
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>YouTube Music Wrapper — offline</title>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        margin: 0;
+        background: #0f0f0f;
+        color: #f1f1f1;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+      main { max-width: 480px; padding: 32px; text-align: center; }
+      h1 { font-size: 20px; margin-bottom: 12px; }
+      p { color: #aaa; margin: 0 0 24px; line-height: 1.5; }
+      button {
+        appearance: none;
+        background: #ff0033;
+        color: white;
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 20px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      button:hover { filter: brightness(1.1); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Couldn't reach YouTube Music</h1>
+      <p>${safeMessage}</p>
+      <button onclick="location.href='${START_URL}'">Try again</button>
+    </main>
+  </body>
+</html>`;
+
+  return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
+}
+
 function installDockIcon(): void {
   if (process.platform !== "darwin" || !app.dock) {
     return;
@@ -256,56 +347,4 @@ function installDockIcon(): void {
   }
 }
 
-function installNavigationPolicy(window: BrowserWindow): void {
-  window.webContents.setWindowOpenHandler(({ url }) => {
-    if (shouldLoadInApp(url)) {
-      void window.loadURL(url);
-    } else {
-      void shell.openExternal(url);
-    }
 
-    return { action: "deny" };
-  });
-
-  window.webContents.on("will-navigate", (event, url) => {
-    if (shouldLoadInApp(url)) {
-      return;
-    }
-
-    event.preventDefault();
-    void shell.openExternal(url);
-  });
-}
-
-function shouldLoadInApp(rawUrl: string): boolean {
-  let url: URL;
-
-  try {
-    url = new URL(rawUrl);
-  } catch {
-    return false;
-  }
-
-  if (url.protocol !== "https:" && url.protocol !== "http:") {
-    return false;
-  }
-
-  const host = url.hostname.toLowerCase();
-
-  return isYouTubeHost(host) || isGoogleAccountFlowHost(host);
-}
-
-function isYouTubeHost(host: string): boolean {
-  return host === "youtube.com" || host.endsWith(".youtube.com");
-}
-
-function isGoogleAccountFlowHost(host: string): boolean {
-  return [
-    "accounts.google.com",
-    "myaccount.google.com",
-    "pay.google.com",
-    "payments.google.com",
-    "policies.google.com",
-    "support.google.com"
-  ].includes(host);
-}
