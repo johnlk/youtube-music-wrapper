@@ -1,24 +1,57 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
-  <title>YouTube Music Wrapper icon</title>
+  <title>YouTube Music Wrapper icon — dark mode with hero play button and radio knobs</title>
+  <!--
+    Riff on dark-mode variant: the classic YouTube play-button shape (the rounded
+    horizontal rect with a triangle) is the HERO element, large and centered.
+    Wordmark "YouTube" sits beneath it. Two radio dial knobs flank each side
+    of the wordmark, evoking a vintage radio / music receiver.
+  -->
+
   <defs>
-    <linearGradient id="bg" x1="128" y1="96" x2="896" y2="928" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ff4d4d" />
-      <stop offset="0.55" stop-color="#e60023" />
-      <stop offset="1" stop-color="#8f0015" />
-    </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="28" stdDeviation="38" flood-color="#1f0008" flood-opacity="0.28" />
-    </filter>
+    <!--
+      Knob symbol: outer ring + small filled hub + tick indicator from center.
+      Use rotate on the wrapping <use> to vary each dial's setting.
+      Origin (0,0) is the knob center.
+    -->
+    <symbol id="knob" overflow="visible">
+      <!-- outer ring -->
+      <circle r="34" fill="none" stroke="#f1ede4" stroke-width="6"/>
+      <!-- inner hub (subtle) -->
+      <circle r="6" fill="#f1ede4"/>
+      <!-- tick indicator pointing "up" by default; rotate the use to change setting -->
+      <rect x="-4" y="-32" width="8" height="20" rx="3" fill="#f1ede4"/>
+    </symbol>
   </defs>
-  <rect width="1024" height="1024" rx="224" fill="url(#bg)" />
-  <circle cx="512" cy="512" r="332" fill="none" stroke="#ffffff" stroke-opacity="0.22" stroke-width="54" />
-  <g filter="url(#shadow)">
-    <circle cx="512" cy="512" r="242" fill="#ffffff" />
-    <path d="M454 363v298l246-149z" fill="#e60023" />
-  </g>
-  <path
-    d="M356 692c0-44 43-80 96-80 19 0 37 5 52 13V366h64v246c15-8 33-13 52-13 53 0 96 36 96 80s-43 80-96 80-96-36-96-80V462h-64v217c0 44-43 80-96 80s-96-36-96-80 43-80 96-80c19 0 37 5 52 13v-96h64v176c0 44-43 80-96 80s-96-36-96-80z"
-    fill="#1f0a0f"
-    opacity="0.13"
-  />
+
+  <rect width="1024" height="1024" rx="224" fill="#0d0d0d"/>
+
+  <!-- Hero play button: classic YouTube horizontal rounded rect -->
+  <rect x="172" y="220" width="680" height="464" rx="120" fill="#f1ede4"/>
+  <!-- centered play triangle -->
+  <path d="M432 348 L680 452 L432 556 Z" fill="#0d0d0d"/>
+
+  <!-- Wordmark "YouTube" beneath, smaller, single-color off-white -->
+  <text
+    x="512"
+    y="850"
+    text-anchor="middle"
+    fill="#f1ede4"
+    font-family="'Helvetica Neue', 'Arial Black', 'Liberation Sans', sans-serif"
+    font-weight="900"
+    font-stretch="condensed"
+    font-size="132"
+    letter-spacing="-3"
+  >YouTube</text>
+
+  <!-- ===== Radio dial knobs flanking the wordmark =====
+       Two knobs per side, vertically centered around y=820 to align with the
+       wordmark's optical middle. Each knob's tick is rotated to a different
+       angle so they read like real dials at different settings.
+  -->
+  <!-- Left side: two knobs -->
+  <use href="#knob" x="116" y="820" transform="rotate(-35 116 820)"/>
+  <use href="#knob" x="220" y="820" transform="rotate( 60 220 820)"/>
+  <!-- Right side: two knobs -->
+  <use href="#knob" x="804" y="820" transform="rotate(-20 804 820)"/>
+  <use href="#knob" x="908" y="820" transform="rotate( 110 908 820)"/>
 </svg>
