@@ -17,12 +17,12 @@ The app should eventually provide:
 
 ## Current Branch
 
-Branch: `phase-3-focus-search`
+Branch: `phase-3-menu-bar-controller`
 
 Latest merged implementation commit before this phase:
 
 ```text
-866e5c8 Add media key controls (#3)
+19da9bf Add YouTube Music search focus action
 ```
 
 ## Work Completed
@@ -91,7 +91,7 @@ Added:
 - Next/previous use enabled YouTube Music player controls by label or scoped player-bar selectors.
 - Console diagnostics if media-key registration fails because another app owns the shortcut or macOS Accessibility permission is needed.
 
-Phase 3 focus-search follow-up is now in progress.
+Phase 3 focus-search follow-up has been implemented.
 
 Added:
 
@@ -99,6 +99,16 @@ Added:
 - `CommandOrControl+K` accelerator for focusing YouTube Music search.
 - Scoped YouTube Music search dispatch that only runs on `music.youtube.com`.
 - Search action first focuses an existing visible search input, then clicks the page search control and waits briefly for the input to appear.
+
+Phase 3 menu-bar controller follow-up is now in progress.
+
+Added:
+
+- Menu bar controller backed by the existing app icon.
+- Show/hide window action, including restoring hidden or closed windows from the menu bar.
+- Menu bar actions for YouTube Music Home, Focus Search, Play/Pause, Next Track, Previous Track, Mini Player, Always on Top, and Quit.
+- Tray/menu checkbox state refresh for Mini Player and Always on Top.
+- Packaged inclusion of `build/icon.png` so runtime Dock and menu bar icons can resolve inside the app bundle.
 
 ## Verification Completed
 
@@ -143,6 +153,17 @@ bun run package:mac
 git diff --check
 ```
 
+For the Phase 3 menu-bar controller slice, the following checks passed locally:
+
+```sh
+bun run typecheck
+bun run build
+bun run package:mac
+git diff --check
+```
+
+Packaging produced a macOS app bundle, DMG, and zip, and the packaged app archive includes `build/icon.png` and `dist/tray-controller.js`.
+
 ## Manual Compatibility Checks Still Needed
 
 Run:
@@ -166,6 +187,7 @@ Then verify with a real YouTube Music account:
 - Share Current Page opens the native macOS share sheet.
 - Always on Top keeps the app above other windows and persists after reopening.
 - Mini Player switches to compact bounds and restores separately from the standard window size.
+- Menu bar controller appears and its show/hide, home, Focus Search, playback, Mini Player, Always on Top, and Quit actions work.
 - Reset Window Size returns the current mode to its default bounds.
 - Playback menu Play/Pause controls the current YouTube Music player.
 - Playback menu Next Track advances the queue.
@@ -177,7 +199,7 @@ Then verify with a real YouTube Music account:
 
 Phase 1 PR #1, Phase 2 PR #2, and Phase 3 media-key PR #3 were merged into `main`.
 
-The active Phase 3 follow-up branch is `phase-3-focus-search`.
+The active Phase 3 follow-up branch is `phase-3-menu-bar-controller`.
 
 ## Planned Phases
 
@@ -205,7 +227,7 @@ Add:
 
 ### Phase 3: Player Polish
 
-Status: media-key controls implemented and merged; focus-search follow-up implemented on the active branch, pending manual validation.
+Status: media-key controls implemented and merged; focus-search follow-up implemented; menu-bar controller follow-up implemented on the active branch, pending manual validation.
 
 Add:
 
@@ -215,7 +237,7 @@ Add:
   - Next. `Implemented for hardware media key`
   - Previous. `Implemented for hardware media key`
   - Search/focus. `Implemented, pending real YouTube Music validation`
-- Optional menu bar/tray controller.
+- Optional menu bar/tray controller. `Implemented, pending real app validation`
 - Current track detection only if reliable metadata is available without brittle scraping.
 - Native notifications only if metadata proves stable.
 
@@ -230,4 +252,4 @@ Add:
 
 ## Next Recommended Step
 
-Run the manual compatibility checks with the Phase 3 media-key and focus-search controls. If login, playback, menu playback controls, hardware media keys, Focus Search, sharing, always-on-top, mini-player, and state restore work cleanly, continue to a small Phase 3 follow-up for menu bar control. Do not add current-track detection, notifications, or rich player metadata until the page exposes stable metadata without brittle scraping.
+Run the manual compatibility checks with the Phase 3 media-key, focus-search, and menu-bar controls. If login, playback, menu playback controls, hardware media keys, Focus Search, menu bar actions, sharing, always-on-top, mini-player, and state restore work cleanly, continue to Phase 4 packaging polish. Do not add current-track detection, notifications, or rich player metadata until the page exposes stable metadata without brittle scraping.

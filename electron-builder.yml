@@ -5,6 +5,7 @@ directories:
   output: release
 files:
   - dist/**/*
+  - build/icon.png
   - package.json
 mac:
   category: public.app-category.music
