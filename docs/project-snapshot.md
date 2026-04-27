@@ -17,17 +17,17 @@ The app should eventually provide:
 
 ## Current Branch
 
-Branch: `phase-1-electron-spike`
+Branch: `phase-2-native-shell`
 
-Latest implementation commit before this snapshot:
+Latest merged implementation commit before this phase:
 
 ```text
-5695aeb Add Electron YouTube Music compatibility spike
+dd4c504 Add Electron YouTube Music compatibility spike (#1)
 ```
 
 ## Work Completed
 
-Phase 1 compatibility spike has been implemented.
+Phase 1 compatibility spike has been implemented and merged.
 
 Added:
 
@@ -54,6 +54,24 @@ Added:
 - Compatibility checklist in `docs/compatibility-spike.md`.
 - Expanded README with setup and verification commands.
 
+Phase 2 native-shell work is now in progress.
+
+Added:
+
+- Custom app icon source and PNG packaging asset.
+- More complete native app menus:
+  - File/share/current URL actions.
+  - Edit speech and paste-match-style actions.
+  - Navigation home/reload actions.
+  - View zoom, fullscreen, DevTools, always-on-top, mini-player, and reset-size actions.
+- Native macOS share sheet for the current YouTube Music page.
+- Always-on-top toggle.
+- Mini-player window mode.
+- Separate persisted window bounds for standard and mini-player modes.
+- Restore of always-on-top, maximized, fullscreen, standard bounds, and mini bounds.
+- Atomic window-state writes.
+- Narrower Google in-app navigation allowlist for known sign-in/account/support/payment flows while keeping YouTube hosts in-app.
+
 ## Verification Completed
 
 The following checks passed locally:
@@ -68,6 +86,17 @@ git diff --cached --check
 Packaging produced a local macOS app, DMG, and zip under the ignored `release/` directory.
 
 Note: the first package attempt failed because the sandbox could not resolve `github.com` while `electron-builder` was downloading Electron. After network approval, packaging completed successfully.
+
+For the Phase 2 native-shell slice, the following checks passed locally:
+
+```sh
+bun run typecheck
+bun run build
+bun run package:mac
+git diff --check
+```
+
+Packaging produced a macOS app bundle with `CFBundleIconFile` set to `icon.icns`, generated from `build/icon.png`.
 
 ## Manual Compatibility Checks Still Needed
 
@@ -88,33 +117,22 @@ Then verify with a real YouTube Music account:
 - Library navigation works.
 - Account menu works.
 - External non-Google/non-YouTube links open in the system browser.
+- Share Current Page opens the native macOS share sheet.
+- Always on Top keeps the app above other windows and persists after reopening.
+- Mini Player switches to compact bounds and restores separately from the standard window size.
+- Reset Window Size returns the current mode to its default bounds.
 
 ## PR Status
 
-The branch was pushed to GitHub:
+Phase 1 PR #1 was merged into `main`.
 
-```text
-origin/phase-1-electron-spike
-```
-
-PR creation was attempted but blocked because the local GitHub CLI token is invalid:
-
-```text
-The token in default is invalid.
-To re-authenticate, run: gh auth login -h github.com
-```
-
-PR creation URL:
-
-```text
-https://github.com/johnlk/youtube-music-wrapper/pull/new/phase-1-electron-spike
-```
+The active Phase 2 branch is `phase-2-native-shell`.
 
 ## Planned Phases
 
 ### Phase 1: Compatibility Spike
 
-Status: implemented, pending manual login/playback validation.
+Status: implemented and merged, pending manual login/playback validation.
 
 Purpose: prove that YouTube Music works reliably inside Electron before investing in native app polish.
 
@@ -122,15 +140,17 @@ Pivot rule: if Google sign-in is blocked or flaky in Electron, stop Electron-spe
 
 ### Phase 2: Native Shell
 
+Status: in progress.
+
 Add:
 
-- Custom app icon.
-- More complete macOS menu.
-- Share current song/page action.
-- Always-on-top toggle.
-- Mini-player window mode.
-- Stronger window/session restore polish.
-- Better external-link allowlist after observing real login and account flows.
+- Custom app icon. `Implemented`
+- More complete macOS menu. `Implemented`
+- Share current song/page action. `Implemented for current page`
+- Always-on-top toggle. `Implemented`
+- Mini-player window mode. `Implemented`
+- Stronger window/session restore polish. `Implemented`
+- Better external-link allowlist after observing real login and account flows. `Partially implemented; still needs validation against real login/account flows`
 
 ### Phase 3: Player Polish
 
@@ -157,4 +177,4 @@ Add:
 
 ## Next Recommended Step
 
-Run the manual compatibility checks. If login and playback work cleanly, continue to Phase 2 on top of the Electron implementation. If login fails because of embedded browser restrictions, pivot before adding media keys or mini-player features.
+Run the manual compatibility checks with the Phase 2 shell controls. If login, playback, sharing, always-on-top, mini-player, and state restore work cleanly, continue to Phase 3 media-key and player-polish work. If login fails because of embedded browser restrictions, pivot before adding media keys or metadata-dependent features.

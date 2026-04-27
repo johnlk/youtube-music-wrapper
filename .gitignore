@@ -1,5 +1,7 @@
 node_modules/
 dist/
 release/
+build/*.icns
+build/*.iconset/
 *.log
 .DS_Store
