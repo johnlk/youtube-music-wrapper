@@ -28,6 +28,7 @@ bun run package:mac
 - Dedicated Electron window for `https://music.youtube.com/`.
 - Persistent YouTube Music session partition.
 - Native macOS menu actions for navigation, sharing, URL copying, zoom, fullscreen, DevTools, always-on-top, and mini-player mode.
+- Playback menu actions and hardware media-key handlers for play/pause, next track, and previous track.
 - Window state restore with separate standard and mini-player bounds.
 - Custom app icon for development and packaging.
 

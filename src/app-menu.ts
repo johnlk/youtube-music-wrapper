@@ -1,4 +1,5 @@
 import { BrowserWindow, clipboard, Menu, ShareMenu, shell, type MenuItemConstructorOptions } from "electron";
+import type { MediaControlAction } from "./media-controls";
 import type { WindowMode } from "./window-state";
 
 const APP_NAME = "YouTube Music Wrapper";
@@ -14,6 +15,7 @@ type AppMenuController = {
   getWindow: WindowProvider;
   getState: () => AppMenuState;
   loadHome: () => void;
+  sendMediaControl: (action: MediaControlAction) => void;
   toggleAlwaysOnTop: () => void;
   toggleMiniPlayer: () => void;
   resetWindowSize: () => void;
@@ -98,6 +100,23 @@ export function installAppMenu(controller: AppMenuController): void {
           label: "Reload",
           accelerator: "CommandOrControl+R",
           click: () => controller.getWindow()?.webContents.reload()
+        }
+      ]
+    },
+    {
+      label: "Playback",
+      submenu: [
+        {
+          label: "Play/Pause",
+          click: () => controller.sendMediaControl("playPause")
+        },
+        {
+          label: "Next Track",
+          click: () => controller.sendMediaControl("nextTrack")
+        },
+        {
+          label: "Previous Track",
+          click: () => controller.sendMediaControl("previousTrack")
         }
       ]
     },
