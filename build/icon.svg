@@ -1,57 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
-  <title>YouTube Music Wrapper icon — dark mode with hero play button and radio knobs</title>
-  <!--
-    Riff on dark-mode variant: the classic YouTube play-button shape (the rounded
-    horizontal rect with a triangle) is the HERO element, large and centered.
-    Wordmark "YouTube" sits beneath it. Two radio dial knobs flank each side
-    of the wordmark, evoking a vintage radio / music receiver.
-  -->
-
-  <defs>
-    <!--
-      Knob symbol: outer ring + small filled hub + tick indicator from center.
-      Use rotate on the wrapping <use> to vary each dial's setting.
-      Origin (0,0) is the knob center.
-    -->
-    <symbol id="knob" overflow="visible">
-      <!-- outer ring -->
-      <circle r="34" fill="none" stroke="#f1ede4" stroke-width="6"/>
-      <!-- inner hub (subtle) -->
-      <circle r="6" fill="#f1ede4"/>
-      <!-- tick indicator pointing "up" by default; rotate the use to change setting -->
-      <rect x="-4" y="-32" width="8" height="20" rx="3" fill="#f1ede4"/>
-    </symbol>
-  </defs>
+  <title>YouTube Music Wrapper icon</title>
 
   <rect width="1024" height="1024" rx="224" fill="#0d0d0d"/>
 
-  <!-- Hero play button: classic YouTube horizontal rounded rect -->
-  <rect x="172" y="220" width="680" height="464" rx="120" fill="#f1ede4"/>
-  <!-- centered play triangle -->
-  <path d="M432 348 L680 452 L432 556 Z" fill="#0d0d0d"/>
-
-  <!-- Wordmark "YouTube" beneath, smaller, single-color off-white -->
-  <text
-    x="512"
-    y="850"
-    text-anchor="middle"
-    fill="#f1ede4"
-    font-family="'Helvetica Neue', 'Arial Black', 'Liberation Sans', sans-serif"
-    font-weight="900"
-    font-stretch="condensed"
-    font-size="132"
-    letter-spacing="-3"
-  >YouTube</text>
-
-  <!-- ===== Radio dial knobs flanking the wordmark =====
-       Two knobs per side, vertically centered around y=820 to align with the
-       wordmark's optical middle. Each knob's tick is rotated to a different
-       angle so they read like real dials at different settings.
-  -->
-  <!-- Left side: two knobs -->
-  <use href="#knob" x="116" y="820" transform="rotate(-35 116 820)"/>
-  <use href="#knob" x="220" y="820" transform="rotate( 60 220 820)"/>
-  <!-- Right side: two knobs -->
-  <use href="#knob" x="804" y="820" transform="rotate(-20 804 820)"/>
-  <use href="#knob" x="908" y="820" transform="rotate( 110 908 820)"/>
+  <!-- Centered play button -->
+  <rect x="232" y="320" width="560" height="384" rx="100" fill="#f1ede4"/>
+  <path d="M444 426 L614 512 L444 598 Z" fill="#0d0d0d"/>
 </svg>
