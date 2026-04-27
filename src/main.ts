@@ -7,6 +7,7 @@ import {
   sendMediaControl,
   unregisterMediaShortcuts
 } from "./media-controls";
+import { focusSearch } from "./page-actions";
 import {
   applyWindowMode,
   captureWindowState,
@@ -116,6 +117,9 @@ function installShellMenu(): void {
       isAlwaysOnTop: Boolean(mainWindow?.isAlwaysOnTop() ?? getSavedWindowState().isAlwaysOnTop),
       windowMode
     }),
+    focusSearch: () => {
+      void focusSearch(() => mainWindow);
+    },
     loadHome: () => {
       void mainWindow?.loadURL(START_URL);
     },
