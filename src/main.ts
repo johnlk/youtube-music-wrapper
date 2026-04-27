@@ -5,8 +5,11 @@ import {
   installAppCommandMediaControls,
   registerMediaShortcuts,
   sendMediaControl,
+  type MediaControlAction,
   unregisterMediaShortcuts
 } from "./media-controls";
+import { focusSearch } from "./page-actions";
+import { installTrayController, updateTrayControllerMenu } from "./tray-controller";
 import {
   applyWindowMode,
   captureWindowState,
@@ -35,15 +38,7 @@ if (!gotSingleInstanceLock) {
   app.quit();
 } else {
   app.on("second-instance", () => {
-    if (!mainWindow) {
-      return;
-    }
-
-    if (mainWindow.isMinimized()) {
-      mainWindow.restore();
-    }
-
-    mainWindow.focus();
+    showMainWindow();
   });
 
   void app.whenReady().then(() => {
@@ -52,12 +47,11 @@ if (!gotSingleInstanceLock) {
     installShellMenu();
     installDockIcon();
     createMainWindow();
+    installTrayMenu();
     registerMediaShortcuts(() => mainWindow);
 
     app.on("activate", () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        createMainWindow();
-      }
+      showMainWindow();
     });
   });
 
@@ -101,6 +95,7 @@ function createMainWindow(): BrowserWindow {
   window.on("closed", () => {
     if (mainWindow === window) {
       mainWindow = null;
+      updateTrayControllerMenu();
     }
   });
 
@@ -116,16 +111,72 @@ function installShellMenu(): void {
       isAlwaysOnTop: Boolean(mainWindow?.isAlwaysOnTop() ?? getSavedWindowState().isAlwaysOnTop),
       windowMode
     }),
-    loadHome: () => {
-      void mainWindow?.loadURL(START_URL);
-    },
-    sendMediaControl: (action) => {
-      void sendMediaControl(() => mainWindow, action);
-    },
+    focusSearch: focusSearchInMainWindow,
+    loadHome,
+    sendMediaControl: sendMediaControlToMainWindow,
     resetWindowSize,
     toggleAlwaysOnTop,
     toggleMiniPlayer
   });
+}
+
+function installTrayMenu(): void {
+  installTrayController({
+    getWindow: () => mainWindow,
+    getState: () => ({
+      isAlwaysOnTop: Boolean(mainWindow?.isAlwaysOnTop() ?? getSavedWindowState().isAlwaysOnTop),
+      isWindowVisible: Boolean(mainWindow?.isVisible()),
+      windowMode
+    }),
+    focusSearch: focusSearchInMainWindow,
+    loadHome,
+    sendMediaControl: sendMediaControlToMainWindow,
+    toggleAlwaysOnTop,
+    toggleMiniPlayer,
+    toggleWindowVisibility
+  });
+}
+
+function showMainWindow(): BrowserWindow {
+  const window = mainWindow ?? createMainWindow();
+
+  if (window.isMinimized()) {
+    window.restore();
+  }
+
+  if (!window.isVisible()) {
+    window.show();
+  }
+
+  window.focus();
+  updateTrayControllerMenu();
+
+  return window;
+}
+
+function toggleWindowVisibility(): void {
+  if (mainWindow?.isVisible() && mainWindow.isFocused()) {
+    mainWindow.hide();
+    updateTrayControllerMenu();
+    return;
+  }
+
+  showMainWindow();
+}
+
+function loadHome(): void {
+  const window = showMainWindow();
+
+  void window.loadURL(START_URL);
+}
+
+function focusSearchInMainWindow(): void {
+  showMainWindow();
+  void focusSearch(() => mainWindow);
+}
+
+function sendMediaControlToMainWindow(action: MediaControlAction): void {
+  void sendMediaControl(() => mainWindow, action);
 }
 
 function toggleAlwaysOnTop(): void {
@@ -138,6 +189,7 @@ function toggleAlwaysOnTop(): void {
   window.setAlwaysOnTop(!window.isAlwaysOnTop(), "floating");
   persistCurrentWindowState();
   installShellMenu();
+  updateTrayControllerMenu();
 }
 
 function toggleMiniPlayer(): void {
@@ -152,6 +204,7 @@ function toggleMiniPlayer(): void {
   applyWindowMode(window, windowMode, getSavedWindowState());
   persistCurrentWindowState();
   installShellMenu();
+  updateTrayControllerMenu();
 }
 
 function resetWindowSize(): void {
@@ -171,6 +224,7 @@ function resetWindowSize(): void {
 
   applyWindowMode(window, windowMode, savedWindowState);
   persistCurrentWindowState();
+  updateTrayControllerMenu();
 }
 
 function persistCurrentWindowState(): void {

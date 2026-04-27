@@ -17,9 +17,11 @@ bun run dev
 - Search, playback, queueing, library navigation, and account switching work.
 - External non-Google/non-YouTube links open in the system browser.
 - Back, forward, reload, and current URL menu actions work.
+- Focus Search opens or focuses the YouTube Music search field.
 - Share Current Page opens the macOS share sheet.
 - Always on Top toggles the main window above other windows.
 - Mini Player toggles between compact and standard window bounds.
+- The menu bar controller appears and its show/hide, home, focus search, playback, mini-player, always-on-top, and quit actions work.
 - Standard and mini-player window sizes restore after quitting and reopening.
 - Playback menu actions control play/pause, next track, and previous track on `music.youtube.com`.
 - Hardware media keys control play/pause, next track, and previous track while the app is running.

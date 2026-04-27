@@ -14,6 +14,7 @@ type AppMenuState = {
 type AppMenuController = {
   getWindow: WindowProvider;
   getState: () => AppMenuState;
+  focusSearch: () => void;
   loadHome: () => void;
   sendMediaControl: (action: MediaControlAction) => void;
   toggleAlwaysOnTop: () => void;
@@ -94,6 +95,11 @@ export function installAppMenu(controller: AppMenuController): void {
           label: "YouTube Music Home",
           accelerator: "CommandOrControl+L",
           click: controller.loadHome
+        },
+        {
+          label: "Focus Search",
+          accelerator: "CommandOrControl+K",
+          click: controller.focusSearch
         },
         { type: "separator" },
         {
