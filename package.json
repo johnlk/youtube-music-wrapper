@@ -1,0 +1,27 @@
+{
+  "name": "youtube-music-wrapper",
+  "version": "0.1.0",
+  "description": "A small desktop shell for YouTube Music.",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "bun run build && electron .",
+    "package:mac": "bun run build && electron-builder --mac --publish never",
+    "start": "bun run dev",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "electron",
+    "youtube-music",
+    "desktop"
+  ],
+  "author": "John Kuhn",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "electron": "^35.2.1",
+    "electron-builder": "^26.0.12",
+    "typescript": "^5.8.3"
+  }
+}
