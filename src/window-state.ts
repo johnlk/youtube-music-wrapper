@@ -18,6 +18,11 @@ const MINI_WINDOW_MINIMUM = { width: 380, height: 520 };
 const STANDARD_WINDOW_DEFAULT = { width: 1280, height: 900 };
 const MINI_WINDOW_DEFAULT = { width: 430, height: 660 };
 const STATE_WRITE_DELAY_MS = 250;
+// Sanity bound: anything larger than this is almost certainly corrupt or
+// hostile state. Window managers cap at far less, but this keeps the JSON
+// parser from passing absurd values into Electron's bounds APIs.
+const MAX_BOUND_DIMENSION = 32768;
+const MAX_BOUND_COORDINATE = 100000;
 
 function statePath(): string {
   return path.join(app.getPath("userData"), "window-state.json");
@@ -145,13 +150,27 @@ export function trackWindowState(window: BrowserWindow, persistState: () => void
   });
 }
 
-export function writeWindowState(state: SavedWindowState): void {
-  fs.mkdirSync(app.getPath("userData"), { recursive: true });
-  const destinationPath = statePath();
-  const tempPath = `${destinationPath}.tmp`;
+let userDataDirEnsured = false;
 
-  fs.writeFileSync(tempPath, JSON.stringify(state, null, 2));
-  fs.renameSync(tempPath, destinationPath);
+export function writeWindowState(state: SavedWindowState): void {
+  try {
+    if (!userDataDirEnsured) {
+      fs.mkdirSync(app.getPath("userData"), { recursive: true });
+      userDataDirEnsured = true;
+    }
+
+    const destinationPath = statePath();
+    const tempPath = `${destinationPath}.tmp`;
+
+    fs.writeFileSync(tempPath, JSON.stringify(state, null, 2));
+    fs.renameSync(tempPath, destinationPath);
+  } catch (error) {
+    // Persisting window state is best-effort. We never want a disk full /
+    // permission error to crash the main process — particularly during the
+    // synchronous `close` path.
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[window-state] Failed to persist window state: ${message}.`);
+  }
 }
 
 function getDefaultWindowState(): SavedWindowState {
@@ -219,7 +238,11 @@ function coerceBounds(bounds: Partial<Rectangle> | undefined): Rectangle | undef
     isFiniteNumber(bounds.width) &&
     isFiniteNumber(bounds.height) &&
     bounds.width > 0 &&
-    bounds.height > 0
+    bounds.height > 0 &&
+    bounds.width <= MAX_BOUND_DIMENSION &&
+    bounds.height <= MAX_BOUND_DIMENSION &&
+    Math.abs(bounds.x) <= MAX_BOUND_COORDINATE &&
+    Math.abs(bounds.y) <= MAX_BOUND_COORDINATE
   ) {
     return {
       x: Math.round(bounds.x),

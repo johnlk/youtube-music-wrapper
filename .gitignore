@@ -4,4 +4,4 @@ release/
 build/*.icns
 build/*.iconset/
 *.log
-.DS_Store
+**/.DS_Store
