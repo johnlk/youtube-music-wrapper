@@ -2,6 +2,12 @@ import { app, BrowserWindow, nativeImage, shell } from "electron";
 import * as path from "node:path";
 import { installAppMenu } from "./app-menu";
 import {
+  installAppCommandMediaControls,
+  registerMediaShortcuts,
+  sendMediaControl,
+  unregisterMediaShortcuts
+} from "./media-controls";
+import {
   applyWindowMode,
   captureWindowState,
   getInitialWindowOptions,
@@ -46,6 +52,7 @@ if (!gotSingleInstanceLock) {
     installShellMenu();
     installDockIcon();
     createMainWindow();
+    registerMediaShortcuts(() => mainWindow);
 
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) {
@@ -58,6 +65,10 @@ if (!gotSingleInstanceLock) {
     if (process.platform !== "darwin") {
       app.quit();
     }
+  });
+
+  app.on("will-quit", () => {
+    unregisterMediaShortcuts();
   });
 }
 
@@ -80,6 +91,7 @@ function createMainWindow(): BrowserWindow {
   mainWindow = window;
   restoreWindowPresentation(window, initialWindowState);
   trackWindowState(window, persistCurrentWindowState);
+  installAppCommandMediaControls(window);
   installNavigationPolicy(window);
 
   window.once("ready-to-show", () => {
@@ -106,6 +118,9 @@ function installShellMenu(): void {
     }),
     loadHome: () => {
       void mainWindow?.loadURL(START_URL);
+    },
+    sendMediaControl: (action) => {
+      void sendMediaControl(() => mainWindow, action);
     },
     resetWindowSize,
     toggleAlwaysOnTop,

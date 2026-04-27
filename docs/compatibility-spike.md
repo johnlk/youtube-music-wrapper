@@ -21,6 +21,9 @@ bun run dev
 - Always on Top toggles the main window above other windows.
 - Mini Player toggles between compact and standard window bounds.
 - Standard and mini-player window sizes restore after quitting and reopening.
+- Playback menu actions control play/pause, next track, and previous track on `music.youtube.com`.
+- Hardware media keys control play/pause, next track, and previous track while the app is running.
+- If hardware media keys do not respond, check whether another app owns them or whether macOS Accessibility permission is required.
 
 ## Pivot Criteria
 

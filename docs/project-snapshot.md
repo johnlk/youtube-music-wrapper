@@ -17,12 +17,12 @@ The app should eventually provide:
 
 ## Current Branch
 
-Branch: `phase-2-native-shell`
+Branch: `phase-3-media-keys`
 
 Latest merged implementation commit before this phase:
 
 ```text
-dd4c504 Add Electron YouTube Music compatibility spike (#1)
+fa1c520 Add native shell controls (#2)
 ```
 
 ## Work Completed
@@ -54,7 +54,7 @@ Added:
 - Compatibility checklist in `docs/compatibility-spike.md`.
 - Expanded README with setup and verification commands.
 
-Phase 2 native-shell work is now in progress.
+Phase 2 native-shell work has been implemented and merged.
 
 Added:
 
@@ -71,6 +71,25 @@ Added:
 - Restore of always-on-top, maximized, fullscreen, standard bounds, and mini bounds.
 - Atomic window-state writes.
 - Narrower Google in-app navigation allowlist for known sign-in/account/support/payment flows while keeping YouTube hosts in-app.
+
+Phase 3 media-key work is now in progress.
+
+Added:
+
+- Playback menu actions for:
+  - Play/Pause
+  - Next Track
+  - Previous Track
+- Global hardware media-key registration for:
+  - `MediaPlayPause`
+  - `MediaNextTrack`
+  - `MediaPreviousTrack`
+- Cleanup of registered media shortcuts on quit.
+- Windows/Linux `app-command` handling for equivalent media commands.
+- Scoped YouTube Music control dispatch that only runs on `music.youtube.com`.
+- Play/pause first attempts the page media element, then falls back to enabled YouTube Music player controls.
+- Next/previous use enabled YouTube Music player controls by label or scoped player-bar selectors.
+- Console diagnostics if media-key registration fails because another app owns the shortcut or macOS Accessibility permission is needed.
 
 ## Verification Completed
 
@@ -98,6 +117,14 @@ git diff --check
 
 Packaging produced a macOS app bundle with `CFBundleIconFile` set to `icon.icns`, generated from `build/icon.png`.
 
+For the Phase 3 media-key slice, the following checks passed locally:
+
+```sh
+bun run typecheck
+bun run build
+bun run package:mac
+```
+
 ## Manual Compatibility Checks Still Needed
 
 Run:
@@ -121,12 +148,17 @@ Then verify with a real YouTube Music account:
 - Always on Top keeps the app above other windows and persists after reopening.
 - Mini Player switches to compact bounds and restores separately from the standard window size.
 - Reset Window Size returns the current mode to its default bounds.
+- Playback menu Play/Pause controls the current YouTube Music player.
+- Playback menu Next Track advances the queue.
+- Playback menu Previous Track goes back in the queue.
+- Keyboard media keys trigger play/pause, next track, and previous track while the app is running.
+- If media keys do not respond, confirm whether another app owns the keys or macOS Accessibility permission is required.
 
 ## PR Status
 
-Phase 1 PR #1 was merged into `main`.
+Phase 1 PR #1 and Phase 2 PR #2 were merged into `main`.
 
-The active Phase 2 branch is `phase-2-native-shell`.
+The active Phase 3 branch is `phase-3-media-keys`.
 
 ## Planned Phases
 
@@ -140,7 +172,7 @@ Pivot rule: if Google sign-in is blocked or flaky in Electron, stop Electron-spe
 
 ### Phase 2: Native Shell
 
-Status: in progress.
+Status: implemented and merged.
 
 Add:
 
@@ -154,13 +186,15 @@ Add:
 
 ### Phase 3: Player Polish
 
+Status: in progress.
+
 Add:
 
-- Media key support.
+- Media key support. `Implemented, pending real hardware validation`
 - Optional global shortcuts:
-  - Play/pause
-  - Next
-  - Previous
+  - Play/pause. `Implemented for hardware media key`
+  - Next. `Implemented for hardware media key`
+  - Previous. `Implemented for hardware media key`
   - Search/focus
 - Optional menu bar/tray controller.
 - Current track detection only if reliable metadata is available without brittle scraping.
@@ -177,4 +211,4 @@ Add:
 
 ## Next Recommended Step
 
-Run the manual compatibility checks with the Phase 2 shell controls. If login, playback, sharing, always-on-top, mini-player, and state restore work cleanly, continue to Phase 3 media-key and player-polish work. If login fails because of embedded browser restrictions, pivot before adding media keys or metadata-dependent features.
+Run the manual compatibility checks with the Phase 3 media-key controls. If login, playback, menu playback controls, hardware media keys, sharing, always-on-top, mini-player, and state restore work cleanly, continue to a small Phase 3 follow-up for search/focus or menu bar control. Do not add current-track detection, notifications, or rich player metadata until the page exposes stable metadata without brittle scraping.
