@@ -1,10 +1,26 @@
-import { BrowserWindow, clipboard, Menu, shell, type MenuItemConstructorOptions } from "electron";
+import { BrowserWindow, clipboard, Menu, ShareMenu, shell, type MenuItemConstructorOptions } from "electron";
+import type { WindowMode } from "./window-state";
 
 const APP_NAME = "YouTube Music Wrapper";
 
 type WindowProvider = () => BrowserWindow | null;
 
-export function installAppMenu(getWindow: WindowProvider): void {
+type AppMenuState = {
+  isAlwaysOnTop: boolean;
+  windowMode: WindowMode;
+};
+
+type AppMenuController = {
+  getWindow: WindowProvider;
+  getState: () => AppMenuState;
+  loadHome: () => void;
+  toggleAlwaysOnTop: () => void;
+  toggleMiniPlayer: () => void;
+  resetWindowSize: () => void;
+};
+
+export function installAppMenu(controller: AppMenuController): void {
+  const state = controller.getState();
   const template: MenuItemConstructorOptions[] = [
     {
       label: APP_NAME,
@@ -21,6 +37,28 @@ export function installAppMenu(getWindow: WindowProvider): void {
       ]
     },
     {
+      label: "File",
+      submenu: [
+        {
+          label: "Share Current Page",
+          accelerator: "CommandOrControl+Shift+S",
+          click: () => shareCurrentPage(controller.getWindow())
+        },
+        {
+          label: "Copy Current URL",
+          accelerator: "CommandOrControl+Shift+C",
+          click: () => copyCurrentUrl(controller.getWindow())
+        },
+        {
+          label: "Open Current URL in Browser",
+          accelerator: "CommandOrControl+Shift+O",
+          click: () => openCurrentUrl(controller.getWindow())
+        },
+        { type: "separator" },
+        { role: "close" }
+      ]
+    },
+    {
       label: "Edit",
       submenu: [
         { role: "undo" },
@@ -29,7 +67,12 @@ export function installAppMenu(getWindow: WindowProvider): void {
         { role: "cut" },
         { role: "copy" },
         { role: "paste" },
-        { role: "selectAll" }
+        { role: "pasteAndMatchStyle" },
+        { role: "delete" },
+        { role: "selectAll" },
+        { type: "separator" },
+        { role: "startSpeaking" },
+        { role: "stopSpeaking" }
       ]
     },
     {
@@ -38,44 +81,54 @@ export function installAppMenu(getWindow: WindowProvider): void {
         {
           label: "Back",
           accelerator: "CommandOrControl+[",
-          click: () => getWindow()?.webContents.goBack()
+          click: () => controller.getWindow()?.webContents.goBack()
         },
         {
           label: "Forward",
           accelerator: "CommandOrControl+]",
-          click: () => getWindow()?.webContents.goForward()
+          click: () => controller.getWindow()?.webContents.goForward()
         },
         {
-          label: "Reload",
-          accelerator: "CommandOrControl+R",
-          click: () => getWindow()?.webContents.reload()
+          label: "YouTube Music Home",
+          accelerator: "CommandOrControl+L",
+          click: controller.loadHome
         },
         { type: "separator" },
         {
-          label: "Copy Current URL",
-          accelerator: "CommandOrControl+Shift+C",
-          click: () => {
-            const url = getWindow()?.webContents.getURL();
-            if (url) {
-              clipboard.writeText(url);
-            }
-          }
-        },
-        {
-          label: "Open Current URL in Browser",
-          accelerator: "CommandOrControl+Shift+O",
-          click: () => {
-            const url = getWindow()?.webContents.getURL();
-            if (url) {
-              void shell.openExternal(url);
-            }
-          }
+          label: "Reload",
+          accelerator: "CommandOrControl+R",
+          click: () => controller.getWindow()?.webContents.reload()
         }
       ]
     },
     {
       label: "View",
       submenu: [
+        { role: "forceReload" },
+        { type: "separator" },
+        { role: "resetZoom" },
+        { role: "zoomIn" },
+        { role: "zoomOut" },
+        { type: "separator" },
+        {
+          label: "Always on Top",
+          type: "checkbox",
+          checked: state.isAlwaysOnTop,
+          accelerator: "CommandOrControl+Shift+T",
+          click: controller.toggleAlwaysOnTop
+        },
+        {
+          label: "Mini Player",
+          type: "checkbox",
+          checked: state.windowMode === "mini",
+          accelerator: "CommandOrControl+Shift+M",
+          click: controller.toggleMiniPlayer
+        },
+        {
+          label: "Reset Window Size",
+          click: controller.resetWindowSize
+        },
+        { type: "separator" },
         { role: "toggleDevTools" },
         { role: "togglefullscreen" }
       ]
@@ -92,4 +145,40 @@ export function installAppMenu(getWindow: WindowProvider): void {
   ];
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+function shareCurrentPage(window: BrowserWindow | null): void {
+  const url = window?.webContents.getURL();
+
+  if (!window || !url) {
+    return;
+  }
+
+  const title = window.webContents.getTitle();
+
+  if (process.platform === "darwin") {
+    new ShareMenu({
+      texts: title && title !== url ? [title] : undefined,
+      urls: [url]
+    }).popup({ window });
+    return;
+  }
+
+  clipboard.writeText(url);
+}
+
+function copyCurrentUrl(window: BrowserWindow | null): void {
+  const url = window?.webContents.getURL();
+
+  if (url) {
+    clipboard.writeText(url);
+  }
+}
+
+function openCurrentUrl(window: BrowserWindow | null): void {
+  const url = window?.webContents.getURL();
+
+  if (url) {
+    void shell.openExternal(url);
+  }
 }

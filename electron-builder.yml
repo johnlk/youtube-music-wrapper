@@ -1,12 +1,14 @@
 appId: com.johnkuhn.youtubemusicwrapper
 productName: YouTube Music Wrapper
 directories:
+  buildResources: build
   output: release
 files:
   - dist/**/*
   - package.json
 mac:
   category: public.app-category.music
+  icon: build/icon.png
   target:
     - dmg
     - zip

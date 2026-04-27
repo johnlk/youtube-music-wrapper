@@ -6,7 +6,7 @@ The app deliberately leaves search, queueing, playback, account state, and libra
 
 ## Current Scope
 
-This repo is in the compatibility-spike phase. The main question is whether Google sign-in and YouTube Music playback work reliably inside Electron.
+This repo is in the native-shell phase. The Electron compatibility spike is implemented; the current work adds macOS app polish around menus, window behavior, app identity, sharing, and compact playback controls while YouTube Music continues to own account state, search, queueing, and playback.
 
 ## Development
 
@@ -22,6 +22,14 @@ bun run typecheck
 bun run build
 bun run package:mac
 ```
+
+## Native Shell Features
+
+- Dedicated Electron window for `https://music.youtube.com/`.
+- Persistent YouTube Music session partition.
+- Native macOS menu actions for navigation, sharing, URL copying, zoom, fullscreen, DevTools, always-on-top, and mini-player mode.
+- Window state restore with separate standard and mini-player bounds.
+- Custom app icon for development and packaging.
 
 ## Compatibility Checklist
 

@@ -17,6 +17,10 @@ bun run dev
 - Search, playback, queueing, library navigation, and account switching work.
 - External non-Google/non-YouTube links open in the system browser.
 - Back, forward, reload, and current URL menu actions work.
+- Share Current Page opens the macOS share sheet.
+- Always on Top toggles the main window above other windows.
+- Mini Player toggles between compact and standard window bounds.
+- Standard and mini-player window sizes restore after quitting and reopening.
 
 ## Pivot Criteria
 

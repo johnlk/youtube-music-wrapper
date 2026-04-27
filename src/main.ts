@@ -1,13 +1,25 @@
-import { app, BrowserWindow, shell } from "electron";
+import { app, BrowserWindow, nativeImage, shell } from "electron";
 import * as path from "node:path";
 import { installAppMenu } from "./app-menu";
-import { getInitialWindowOptions, trackWindowState } from "./window-state";
+import {
+  applyWindowMode,
+  captureWindowState,
+  getInitialWindowOptions,
+  readWindowState,
+  restoreWindowPresentation,
+  trackWindowState,
+  type SavedWindowState,
+  type WindowMode,
+  writeWindowState
+} from "./window-state";
 
 const APP_NAME = "YouTube Music Wrapper";
 const START_URL = "https://music.youtube.com/";
 const SESSION_PARTITION = "persist:youtube-music";
 
 let mainWindow: BrowserWindow | null = null;
+let savedWindowState: SavedWindowState | null = null;
+let windowMode: WindowMode = "standard";
 
 app.setName(APP_NAME);
 
@@ -29,7 +41,10 @@ if (!gotSingleInstanceLock) {
   });
 
   void app.whenReady().then(() => {
-    installAppMenu(() => mainWindow);
+    savedWindowState = readWindowState();
+    windowMode = savedWindowState.windowMode;
+    installShellMenu();
+    installDockIcon();
     createMainWindow();
 
     app.on("activate", () => {
@@ -47,12 +62,11 @@ if (!gotSingleInstanceLock) {
 }
 
 function createMainWindow(): BrowserWindow {
+  const initialWindowState = getSavedWindowState();
   const window = new BrowserWindow({
-    ...getInitialWindowOptions(),
+    ...getInitialWindowOptions(initialWindowState),
     title: APP_NAME,
     backgroundColor: "#0f0f0f",
-    minWidth: 960,
-    minHeight: 640,
     show: false,
     webPreferences: {
       contextIsolation: true,
@@ -64,7 +78,8 @@ function createMainWindow(): BrowserWindow {
   });
 
   mainWindow = window;
-  trackWindowState(window);
+  restoreWindowPresentation(window, initialWindowState);
+  trackWindowState(window, persistCurrentWindowState);
   installNavigationPolicy(window);
 
   window.once("ready-to-show", () => {
@@ -80,6 +95,96 @@ function createMainWindow(): BrowserWindow {
   void window.loadURL(START_URL);
 
   return window;
+}
+
+function installShellMenu(): void {
+  installAppMenu({
+    getWindow: () => mainWindow,
+    getState: () => ({
+      isAlwaysOnTop: Boolean(mainWindow?.isAlwaysOnTop() ?? getSavedWindowState().isAlwaysOnTop),
+      windowMode
+    }),
+    loadHome: () => {
+      void mainWindow?.loadURL(START_URL);
+    },
+    resetWindowSize,
+    toggleAlwaysOnTop,
+    toggleMiniPlayer
+  });
+}
+
+function toggleAlwaysOnTop(): void {
+  const window = mainWindow;
+
+  if (!window) {
+    return;
+  }
+
+  window.setAlwaysOnTop(!window.isAlwaysOnTop(), "floating");
+  persistCurrentWindowState();
+  installShellMenu();
+}
+
+function toggleMiniPlayer(): void {
+  const window = mainWindow;
+
+  if (!window) {
+    return;
+  }
+
+  persistCurrentWindowState();
+  windowMode = windowMode === "mini" ? "standard" : "mini";
+  applyWindowMode(window, windowMode, getSavedWindowState());
+  persistCurrentWindowState();
+  installShellMenu();
+}
+
+function resetWindowSize(): void {
+  const window = mainWindow;
+
+  if (!window) {
+    return;
+  }
+
+  savedWindowState = {
+    ...getSavedWindowState(),
+    standardBounds: undefined,
+    miniBounds: undefined,
+    isMaximized: false,
+    isFullScreen: false
+  };
+
+  applyWindowMode(window, windowMode, savedWindowState);
+  persistCurrentWindowState();
+}
+
+function persistCurrentWindowState(): void {
+  if (mainWindow) {
+    savedWindowState = captureWindowState(mainWindow, getSavedWindowState(), windowMode);
+  }
+
+  writeWindowState(getSavedWindowState());
+}
+
+function getSavedWindowState(): SavedWindowState {
+  if (!savedWindowState) {
+    savedWindowState = readWindowState();
+    windowMode = savedWindowState.windowMode;
+  }
+
+  return savedWindowState;
+}
+
+function installDockIcon(): void {
+  if (process.platform !== "darwin" || !app.dock) {
+    return;
+  }
+
+  const icon = nativeImage.createFromPath(path.join(app.getAppPath(), "build", "icon.png"));
+
+  if (!icon.isEmpty()) {
+    app.dock.setIcon(icon);
+  }
 }
 
 function installNavigationPolicy(window: BrowserWindow): void {
@@ -118,11 +223,20 @@ function shouldLoadInApp(rawUrl: string): boolean {
 
   const host = url.hostname.toLowerCase();
 
-  return (
-    host === "music.youtube.com" ||
-    host === "youtube.com" ||
-    host.endsWith(".youtube.com") ||
-    host === "google.com" ||
-    host.endsWith(".google.com")
-  );
+  return isYouTubeHost(host) || isGoogleAccountFlowHost(host);
+}
+
+function isYouTubeHost(host: string): boolean {
+  return host === "youtube.com" || host.endsWith(".youtube.com");
+}
+
+function isGoogleAccountFlowHost(host: string): boolean {
+  return [
+    "accounts.google.com",
+    "myaccount.google.com",
+    "pay.google.com",
+    "payments.google.com",
+    "policies.google.com",
+    "support.google.com"
+  ].includes(host);
 }
