@@ -12,6 +12,8 @@ type TrayControllerState = {
   isAlwaysOnTop: boolean;
   isWindowVisible: boolean;
   windowMode: WindowMode;
+  canGoBack: boolean;
+  canGoForward: boolean;
 };
 
 type TrayController = {
@@ -19,6 +21,8 @@ type TrayController = {
   getState: () => TrayControllerState;
   focusSearch: () => void;
   loadHome: () => void;
+  goBack: () => void;
+  goForward: () => void;
   sendMediaControl: (action: MediaControlAction) => void;
   toggleAlwaysOnTop: () => void;
   toggleMiniPlayer: () => void;
@@ -101,6 +105,17 @@ function buildTrayMenu(controller: TrayController): MenuItemConstructorOptions[]
     {
       label: "Focus Search",
       click: runAndRefresh(controller.focusSearch)
+    },
+    { type: "separator" },
+    {
+      label: "Back",
+      enabled: state.canGoBack,
+      click: runAndRefresh(controller.goBack)
+    },
+    {
+      label: "Forward",
+      enabled: state.canGoForward,
+      click: runAndRefresh(controller.goForward)
     },
     { type: "separator" },
     {

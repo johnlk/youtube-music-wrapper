@@ -1,4 +1,4 @@
-import { app, BrowserWindow, nativeImage } from "electron";
+import { app, BrowserWindow, Menu, nativeImage, type MenuItemConstructorOptions } from "electron";
 import * as path from "node:path";
 import { installAppMenu } from "./app-menu";
 import {
@@ -8,6 +8,13 @@ import {
   type MediaControlAction,
   unregisterMediaShortcuts
 } from "./media-controls";
+import {
+  canNavigateBack,
+  canNavigateForward,
+  installAppCommandNavigation,
+  navigateBack,
+  navigateForward
+} from "./navigation-controls";
 import { focusSearch } from "./page-actions";
 import { installGlobalWebContentsPolicy, installSessionPolicy } from "./security";
 import { installTrayController, updateTrayControllerMenu } from "./tray-controller";
@@ -58,6 +65,7 @@ if (!gotSingleInstanceLock) {
     installDockIcon();
     createMainWindow();
     installTrayMenu();
+    installDockMenu();
     registerMediaShortcuts(() => mainWindow);
 
     app.on("activate", () => {
@@ -96,7 +104,9 @@ function createMainWindow(): BrowserWindow {
   restoreWindowPresentation(window, initialWindowState);
   trackWindowState(window, persistCurrentWindowState);
   installAppCommandMediaControls(window);
+  installAppCommandNavigation(window);
   installLoadFailureRecovery(window);
+  installNavigationStateSync(window);
 
   window.once("ready-to-show", () => {
     window.show();
@@ -136,15 +146,84 @@ function installTrayMenu(): void {
     getState: () => ({
       isAlwaysOnTop: Boolean(mainWindow?.isAlwaysOnTop() ?? getSavedWindowState().isAlwaysOnTop),
       isWindowVisible: Boolean(mainWindow?.isVisible()),
-      windowMode
+      windowMode,
+      canGoBack: canNavigateBack(mainWindow),
+      canGoForward: canNavigateForward(mainWindow)
     }),
     focusSearch: focusSearchInMainWindow,
     loadHome,
+    goBack: () => {
+      navigateBack(mainWindow);
+    },
+    goForward: () => {
+      navigateForward(mainWindow);
+    },
     sendMediaControl: sendMediaControlToMainWindow,
     toggleAlwaysOnTop,
     toggleMiniPlayer,
     toggleWindowVisibility
   });
+}
+
+function installNavigationStateSync(window: BrowserWindow): void {
+  const refresh = (): void => {
+    updateTrayControllerMenu();
+    installDockMenu();
+  };
+
+  window.webContents.on("did-navigate", refresh);
+  window.webContents.on("did-navigate-in-page", refresh);
+  window.webContents.on("did-frame-navigate", refresh);
+}
+
+function installDockMenu(): void {
+  if (process.platform !== "darwin" || !app.dock) {
+    return;
+  }
+
+  const canBack = canNavigateBack(mainWindow);
+  const canForward = canNavigateForward(mainWindow);
+
+  const template: MenuItemConstructorOptions[] = [
+    {
+      label: "Back",
+      enabled: canBack,
+      click: () => {
+        navigateBack(mainWindow);
+      }
+    },
+    {
+      label: "Forward",
+      enabled: canForward,
+      click: () => {
+        navigateForward(mainWindow);
+      }
+    },
+    { type: "separator" },
+    {
+      label: "YouTube Music Home",
+      click: loadHome
+    },
+    {
+      label: "Focus Search",
+      click: focusSearchInMainWindow
+    },
+    { type: "separator" },
+    {
+      label: "Play/Pause",
+      click: () => sendMediaControlToMainWindow("playPause")
+    },
+    {
+      label: "Next Track",
+      click: () => sendMediaControlToMainWindow("nextTrack")
+    },
+    {
+      label: "Previous Track",
+      click: () => sendMediaControlToMainWindow("previousTrack")
+    }
+  ];
+
+  app.dock.setMenu(Menu.buildFromTemplate(template));
 }
 
 function showMainWindow(): BrowserWindow {
