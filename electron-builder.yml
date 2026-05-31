@@ -10,6 +10,7 @@ files:
 mac:
   category: public.app-category.music
   icon: build/icon.png
+  sign: ./scripts/mac-ad-hoc-sign.cjs
   target:
     - dmg
     - zip

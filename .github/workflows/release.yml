@@ -53,6 +53,30 @@ jobs:
       - name: Package macOS app
         run: bun run package:mac
 
+      - name: Verify macOS package
+        run: |
+          shopt -s nullglob
+          apps=(release/mac-*/*.app)
+          dmgs=(release/*.dmg)
+
+          if (( ${#apps[@]} == 0 )); then
+            echo "No packaged macOS app was produced" >&2
+            exit 1
+          fi
+
+          if (( ${#dmgs[@]} == 0 )); then
+            echo "No macOS DMG was produced" >&2
+            exit 1
+          fi
+
+          for app in "${apps[@]}"; do
+            codesign --verify --deep --strict --verbose=4 "${app}"
+          done
+
+          for dmg in "${dmgs[@]}"; do
+            hdiutil verify "${dmg}"
+          done
+
       - name: Resolve release tag
         id: release-tag
         run: |
