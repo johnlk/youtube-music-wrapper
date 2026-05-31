@@ -1,6 +1,6 @@
 {
   "name": "youtube-music-wrapper",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A small desktop shell for YouTube Music.",
   "private": true,
   "main": "dist/main.js",
@@ -20,6 +20,7 @@
   "author": "John Kuhn",
   "license": "MIT",
   "devDependencies": {
+    "@electron/osx-sign": "1.3.1",
     "@types/node": "25.9.1",
     "electron": "42.3.0",
     "electron-builder": "26.0.12",
