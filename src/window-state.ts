@@ -1,6 +1,7 @@
 import { app, BrowserWindow, screen, type BrowserWindowConstructorOptions, type Rectangle } from "electron";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { coerceWindowBounds } from "./window-state-geometry";
 
 export type WindowMode = "standard" | "mini";
 
@@ -18,11 +19,6 @@ const MINI_WINDOW_MINIMUM = { width: 380, height: 520 };
 const STANDARD_WINDOW_DEFAULT = { width: 1280, height: 900 };
 const MINI_WINDOW_DEFAULT = { width: 430, height: 660 };
 const STATE_WRITE_DELAY_MS = 250;
-// Sanity bound: anything larger than this is almost certainly corrupt or
-// hostile state. Window managers cap at far less, but this keeps the JSON
-// parser from passing absurd values into Electron's bounds APIs.
-const MAX_BOUND_DIMENSION = 32768;
-const MAX_BOUND_COORDINATE = 100000;
 
 function statePath(): string {
   return path.join(app.getPath("userData"), "window-state.json");
@@ -32,12 +28,12 @@ export function readWindowState(): SavedWindowState {
   try {
     const rawState = fs.readFileSync(statePath(), "utf8");
     const parsedState = JSON.parse(rawState) as Partial<SavedWindowState> & { bounds?: Rectangle };
-    const legacyBounds = coerceBounds(parsedState.bounds);
+    const legacyBounds = coerceWindowBounds(parsedState.bounds);
 
     return {
       windowMode: parsedState.windowMode === "mini" ? "mini" : "standard",
-      standardBounds: coerceBounds(parsedState.standardBounds) ?? legacyBounds,
-      miniBounds: coerceBounds(parsedState.miniBounds),
+      standardBounds: coerceWindowBounds(parsedState.standardBounds) ?? legacyBounds,
+      miniBounds: coerceWindowBounds(parsedState.miniBounds),
       isMaximized: Boolean(parsedState.isMaximized),
       isFullScreen: Boolean(parsedState.isFullScreen),
       isAlwaysOnTop: Boolean(parsedState.isAlwaysOnTop)
@@ -98,7 +94,7 @@ export function captureWindowState(
   previousState: SavedWindowState,
   windowMode: WindowMode
 ): SavedWindowState {
-  const bounds = coerceBounds(window.getNormalBounds());
+  const bounds = coerceWindowBounds(window.getNormalBounds());
   const nextState: SavedWindowState = {
     ...previousState,
     windowMode,
@@ -230,31 +226,6 @@ function constrainBoundsToDisplay(bounds: Rectangle, minimum: { width: number; h
   };
 }
 
-function coerceBounds(bounds: Partial<Rectangle> | undefined): Rectangle | undefined {
-  if (
-    bounds &&
-    isFiniteNumber(bounds.x) &&
-    isFiniteNumber(bounds.y) &&
-    isFiniteNumber(bounds.width) &&
-    isFiniteNumber(bounds.height) &&
-    bounds.width > 0 &&
-    bounds.height > 0 &&
-    bounds.width <= MAX_BOUND_DIMENSION &&
-    bounds.height <= MAX_BOUND_DIMENSION &&
-    Math.abs(bounds.x) <= MAX_BOUND_COORDINATE &&
-    Math.abs(bounds.y) <= MAX_BOUND_COORDINATE
-  ) {
-    return {
-      x: Math.round(bounds.x),
-      y: Math.round(bounds.y),
-      width: Math.round(bounds.width),
-      height: Math.round(bounds.height)
-    };
-  }
-
-  return undefined;
-}
-
 function isVisibleOnAnyDisplay(bounds: Rectangle): boolean {
   return screen.getAllDisplays().some((display) => {
     const area = display.workArea;
@@ -271,8 +242,4 @@ function clamp(value: number, min: number, max: number): number {
   }
 
   return Math.min(Math.max(value, min), max);
-}
-
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
 }
