@@ -10,6 +10,9 @@ files:
 mac:
   category: public.app-category.music
   icon: build/icon.png
+  # "-" is an ad-hoc identity. electron-builder 26.15+ skips mac.sign entirely
+  # when no keychain certificate is found, unless identity is set explicitly.
+  identity: "-"
   sign: ./scripts/mac-ad-hoc-sign.cjs
   target:
     - dmg

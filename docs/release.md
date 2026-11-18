@@ -36,7 +36,7 @@ After the tag push, GitHub Actions creates or updates the GitHub Release and upl
 
 ## Signing and Notarization
 
-The current workflow sets `CSC_IDENTITY_AUTO_DISCOVERY=false`, so the CI build can produce personal-use artifacts without Apple Developer certificates. The packaged app is ad-hoc signed so the bundle has valid sealed resources before it is placed in the DMG, and the release workflow verifies both the app signature and the DMG before uploading assets.
+The current workflow sets `CSC_IDENTITY_AUTO_DISCOVERY=false`, so the CI build can produce personal-use artifacts without Apple Developer certificates. `electron-builder.yml` sets `mac.identity` to `-` so packaging still runs `scripts/mac-ad-hoc-sign.cjs`. That ad-hoc signature seals the bundle before it is placed in the DMG, and the release workflow verifies both the app signature and the DMG before uploading assets.
 
 Ad-hoc signing is not notarization. macOS may still show the unsigned-app warning documented in the README for downloaded release assets.
 
