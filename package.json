@@ -1,6 +1,6 @@
 {
   "name": "youtube-music-wrapper",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A small desktop shell for YouTube Music.",
   "private": true,
   "main": "dist/main.js",
