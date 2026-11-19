@@ -1,5 +1,6 @@
 import { BrowserWindow, globalShortcut, systemPreferences, type WebContents } from "electron";
 import { sendPageActionRequest } from "./ipc-bridge";
+import { usesSystemNowPlaying } from "./now-playing-policy";
 import { isMusicHost } from "./url-policy";
 
 export type MediaControlAction = "playPause" | "nextTrack" | "previousTrack";
@@ -35,6 +36,13 @@ const KEYBOARD_FALLBACKS: Record<MediaControlAction, { keyCode: string; modifier
 };
 
 export function registerMediaShortcuts(getWindow: WindowProvider): RegisteredMediaShortcut[] {
+  if (usesSystemNowPlaying(process.platform)) {
+    console.info(
+      "[media-controls] Play, pause, and skip are left to macOS Now Playing (menu bar and Control Center)."
+    );
+    return [];
+  }
+
   const registeredShortcuts = MEDIA_SHORTCUTS.map(({ accelerator, action }) => {
     const registered = safeRegisterShortcut(accelerator, () => {
       void sendMediaControl(getWindow, action);

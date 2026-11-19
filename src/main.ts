@@ -96,7 +96,9 @@ function createMainWindow(): BrowserWindow {
       nodeIntegration: false,
       partition: SESSION_PARTITION,
       preload: path.join(__dirname, "preload.js"),
-      sandbox: true
+      sandbox: true,
+      // Now Playing keeps controlling playback after the window is hidden.
+      backgroundThrottling: false
     }
   });
 

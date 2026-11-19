@@ -56,7 +56,7 @@ Pull requests run the GitHub Actions PR checks, and tagged releases can publish 
 - Persistent YouTube Music session partition.
 - Native macOS menu actions for navigation, search focus, sharing, URL copying, zoom, fullscreen, DevTools, always-on-top, and mini-player mode.
 - Menu bar controller for show/hide, home, search focus, playback, mini-player, always-on-top, and quit actions.
-- Playback menu actions and hardware media-key handlers for play/pause, next track, and previous track.
+- Playback menu actions for play/pause, next track, and previous track. On macOS these also show up in Now Playing (the menu bar and Control Center). Other platforms keep hardware media-key handlers.
 - Window state restore with separate standard and mini-player bounds.
 - Custom app icon for development and packaging.
 
